@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import cross_origin
 from . import device
 
 app = Flask(__name__)
@@ -9,5 +10,6 @@ def index():
 
 
 @app.route('/device/readdata')
+@cross_origin()
 def readdata():
     return device.read_data()
