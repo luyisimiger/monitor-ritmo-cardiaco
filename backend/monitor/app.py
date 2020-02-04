@@ -3,7 +3,14 @@ from flask_cors import cross_origin
 from . import device
 from .managers import SessionManager
 
+
 app = Flask(__name__)
+
+
+@app.before_first_request
+def start_arduino_receiver():
+  print("start_arduino_receiver")
+
 
 @app.route('/')
 def index():
@@ -27,7 +34,7 @@ def session_open():
 @app.route('/sesssions/<int:id>')
 def session_single(id):
   sessions = SessionManager()
-  session = sessions.close(id)
+  session = sessions.get(id)
 
   return session
 
