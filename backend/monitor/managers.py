@@ -12,6 +12,9 @@ class DocumentWithIdMiddleware(Middleware):
   def read(self):
     data = self.storage.read()
 
+    if data is None:
+      return data
+
     for table_name in data:
       table = data[table_name]
 
@@ -48,7 +51,7 @@ class SessionManager(BaseManager):
   def open(self):
 
     id = self.table.insert({
-      "datestart": self.estampa()
+      "status": "open"
     })
 
     return self.get(id)
@@ -56,7 +59,7 @@ class SessionManager(BaseManager):
   def close(self, id):
     
     self.table.update({
-      "dateclose": self.estampa()
+      "status": "close"
     }, doc_ids=[id])
 
     return self.get(id)
@@ -79,7 +82,7 @@ class SessionManager(BaseManager):
     return self.table.all()
 
   def all_opened(self):
-    return self.table.search( ~(where("dateclose").exists()) )
+    return self.table.search( where("status") == "open" )
 
 
 class MeditionManager(BaseManager):
@@ -96,11 +99,13 @@ class MeditionManager(BaseManager):
     })
   
   def all(self, sessionid):
-    return self.table.search(where("sessionid") == sessionid)
+    return self.table.search(where("sessionid") == str(sessionid))
 
   @staticmethod
   def detail(meditions):
     total = 0
+    mindate = None
+    maxdate = None
     
     sumrh = 0
     maxrh = 0
@@ -118,16 +123,23 @@ class MeditionManager(BaseManager):
     
     for m in meditions:
       total += 1
+
+      # initialization
+      mindate = m["date"] if mindate is None else mindate
+      maxdate = m["date"] if maxdate is None else maxdate
       
       # promedio: sumatoria de los datos
-      sumrh += m.rh
-      maxrh = maxrh if maxrh >= m.rh else m.rh
-      minrh = minrh if minrh <= m.rh else m.rh
+      sumrh += m["rh"]
+      maxrh = maxrh if maxrh >= m["rh"] else m["rh"]
+      minrh = minrh if minrh <= m["rh"] else m["rh"]
 
-      sumrr += m.rr
-      maxrr = maxrr if maxrr >= m.rr else m.rr
-      minrr = minrr if minrr <= m.rr else m.rr
+      sumrr += m["rr"]
+      maxrr = maxrr if maxrr >= m["rr"] else m["rr"]
+      minrr = minrr if minrr <= m["rr"] else m["rr"]
 
+      # fechas: maximo y minimo
+      maxdate = maxdate if maxdate >= m["date"] else m["date"]
+      mindate = mindate if mindate <= m["date"] else m["date"]
     
     # promedio: division sobre el total de datos
     avgrh = 0 if total == 0 else sumrh / total
@@ -135,8 +147,8 @@ class MeditionManager(BaseManager):
 
     # desviacion estandar: sum de diferencia de cuadrados
     for m in meditions:
-      ssumrh += (m.rh - avgrh) ** 2
-      ssumrr += (m.rr - avgrr) ** 2
+      ssumrh += (m["rh"] - avgrh) ** 2
+      ssumrr += (m["rr"] - avgrr) ** 2
 
     # desviacion estandar: division sobre el total de datos
     srh = 0 if total >= 0 else ssumrh / total
@@ -147,6 +159,8 @@ class MeditionManager(BaseManager):
     srr = math.sqrt(srr)
 
     return {
+      "datestart": maxdate,
+      "dateend": mindate,
       "rh": {
         "average": avgrh,
         "max": maxrh,
