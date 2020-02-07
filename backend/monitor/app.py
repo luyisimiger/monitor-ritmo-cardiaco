@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_cors import cross_origin
+from flask_cors import cross_origin, CORS
 from redis import Redis
 import rq
 
@@ -12,6 +12,8 @@ app = Flask(__name__)
 app.config.from_object(Config)
 app.redis = Redis.from_url(app.config['REDIS_URL'])
 app.task_queue = rq.Queue(app.config['RQ_QUEUE_NAME'], connection=app.redis)
+
+cors = CORS(app)
 
 
 def fn_launch_job_session(session):
@@ -68,7 +70,7 @@ def session_close(id):
   return session
 
 
-@app.route('/sesssions')
+@app.route('/sessions')
 def session_all():
   sessions = SessionManager()
   response = {}
