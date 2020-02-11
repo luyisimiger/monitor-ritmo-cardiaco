@@ -14,11 +14,11 @@ app.redis = Redis.from_url(app.config['REDIS_URL'])
 app.task_queue = rq.Queue(app.config['RQ_QUEUE_NAME'], connection=app.redis)
 
 cors = CORS(app)
-
+sessions_manager = SessionManager()
 
 def fn_launch_job_session(session):
   meta = { "session_opened": True }
-  job = app.task_queue.enqueue("backend.monitor.task.read_cinturon_data", session, job_id=session["id"], job_timeout="24h", meta=meta)
+  app.task_queue.enqueue("backend.monitor.task.read_cinturon_data", session, job_id=session["id"], job_timeout="24h", meta=meta)
 
 
 @app.route('/')
@@ -32,37 +32,33 @@ def readdata():
     return device.read_data()
 
 
-@app.route('/sesssions/open')
+@app.route('/sessions/open')
 def session_open():
-  sessions = SessionManager()
-  session = sessions.open()
+  session = sessions_manager.open()
   fn_launch_job_session(session)
 
   return session
 
 
-@app.route('/sesssions/<int:id>/capture')
+@app.route('/sessions/<int:id>/capture')
 def session_capture(id):
-  sessions = SessionManager()
-  session = sessions.get(id)
+  session = sessions_manager.get(id)
   fn_launch_job_session(session)
 
   return session
 
 
-@app.route('/sesssions/<int:id>')
-@app.route('/sesssions/<int:id>/detail')
+@app.route('/sessions/<int:id>')
+@app.route('/sessions/<int:id>/detail')
 def session_detail(id):
-  sessions = SessionManager()
-  session = sessions.detail(id)
+  session = sessions_manager.detail(id)
 
   return session
 
 
-@app.route('/sesssions/<int:id>/close')
+@app.route('/sessions/<int:id>/close')
 def session_close(id):
-  sessions = SessionManager()
-  session = sessions.close(id)
+  session = sessions_manager.close(id)
   job = app.task_queue.fetch_job(session["id"])
   job.meta["session_opened"] = False
   job.save_meta()
@@ -70,19 +66,32 @@ def session_close(id):
   return session
 
 
+@app.route('/sessions/<int:id>/delete')
+def session_delete(id):
+  session = sessions_manager.detail(id)
+  sessions_manager.remove(id)
+  return session
+
+
 @app.route('/sessions')
 def session_all():
-  sessions = SessionManager()
   response = {}
-  response["result"] = sessions.all()
+  response["result"] = sessions_manager.all()
 
   return response
 
 
-@app.route('/sesssions/opened')
+@app.route('/sessions/opened')
 def session_opened():
-  sessions = SessionManager()
   response = {}
-  response["result"] = sessions.all_opened()
+  response["result"] = sessions_manager.all_opened()
+
+  return response
+
+
+@app.route('/sessions/full')
+def session_all_full():
+  response = {}
+  response["result"] = sessions_manager.all_full()
 
   return response

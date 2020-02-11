@@ -68,6 +68,10 @@ class SessionManager(BaseManager):
     doc = self.table.get(doc_id=id)
     return doc
 
+  def remove(self, id):
+    self.meditions.remove(id)
+    self.table.remove(doc_ids=[id])
+
   def detail(self, id):
     doc = self.get(id)
     meditions = self.meditions.all(id)
@@ -84,6 +88,10 @@ class SessionManager(BaseManager):
   def all_opened(self):
     return self.table.search( where("status") == "open" )
 
+  def all_full(self):
+    sessions = self.all()
+    return [self.detail(int(s["id"])) for s in sessions]
+
 
 class MeditionManager(BaseManager):
 
@@ -98,6 +106,9 @@ class MeditionManager(BaseManager):
       "rr": rr
     })
   
+  def remove(self, sessionid):
+    self.table.remove(where("sessionid") == str(sessionid))
+
   def all(self, sessionid):
     return self.table.search(where("sessionid") == str(sessionid))
 
