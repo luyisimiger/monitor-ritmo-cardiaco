@@ -2,12 +2,26 @@
   <v-container align-center justify-center>
     <v-row>
       <v-col cols="12">
-        <v-toolbar flat color="">
-          <v-btn outlined color="primary" @click="fetch_session" :loading="sessions_loading">
-            <v-icon>mdi-refresh</v-icon>
-            actualizar
-          </v-btn>
-          <v-spacer></v-spacer>
+        <v-toolbar flat>
+
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn x-large icon color="primary" v-on="on" @click="fetch_session" :loading="sessions_loading">
+                <v-icon>mdi-refresh</v-icon>
+              </v-btn>
+            </template>
+            <span>Actualizar</span>
+          </v-tooltip>
+
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn x-large icon color="primary" v-on="on" :loading="sessions_loading" :to="{'name': 'sessions-open'}">
+                <v-icon>mdi-plus-circle</v-icon>
+              </v-btn>
+            </template>
+            <span>Nueva</span>
+          </v-tooltip>
+
         </v-toolbar>
         
         <v-data-iterator
@@ -30,12 +44,12 @@
                   <v-card-title class="headline">Session # {{ s.id }}</v-card-title>
                   
                   <v-card-actions>
-                    <v-btn outlined x-small color="red">{{ s.status }}</v-btn>
+                    <v-btn outlined x-small :color="s.status == 'open' ? 'green' : 'red'">{{ s.status }}</v-btn>
                     <v-btn outlined x-small color="black">n meditions</v-btn>
                   </v-card-actions>
 
                   <v-card-actions>
-                    <v-btn text color="primary">Ver detalle</v-btn>
+                    <v-btn text color="primary" :to="{ name: 'sessions-detail', params: { id: s.id }}">Ver detalle</v-btn>
                   </v-card-actions>
                 
                 </v-card>
@@ -56,7 +70,10 @@ export default {
   data: () => ({}),
   computed: mapState(["sessions", "sessions_loading"]),
   methods: {
-    ...mapActions(["fetch_session"])
+    ...mapActions(["fetch_session"]),
+    new_session() {
+
+    }
   },
   created() {
     this.fetch_session();

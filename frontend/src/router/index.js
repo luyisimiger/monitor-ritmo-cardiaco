@@ -1,21 +1,11 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Home from "../views/Home.vue";
-import Sessions from "../views/Sessions.vue";
+import sessions from "./sessions.js";
 
 Vue.use(VueRouter);
 
 const routes = [
-  {
-    path: "/sessions",
-    name: "sessions-list",
-    component: Sessions
-  },
-  {
-    path: "/session/open",
-    name: "home",
-    component: Home
-  },
+  ...sessions,
   {
     path: "/about",
     name: "about",
