@@ -15,7 +15,7 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn x-large icon color="primary" v-on="on" :loading="sessions_loading" :to="{'name': 'sessions-open'}">
+              <v-btn x-large icon color="primary" v-on="on" :to="{'name': 'sessions-open'}">
                 <v-icon>mdi-plus-circle</v-icon>
               </v-btn>
             </template>
@@ -40,20 +40,18 @@
                 lg="3"
               >
                 <v-card color="">
-                  
-                  <v-card-title class="headline">Session # {{ s.id }}</v-card-title>
-                  
+                  <v-card-title class="">Session # {{ s.id }}
+                    <v-spacer></v-spacer>
+                    <v-btn text :color="s.status == 'open' ? 'green' : 'red'">{{ s.status }}</v-btn>
+                  </v-card-title>
+                  <v-card-subtitle>{{ s.meditions.length }} meditions</v-card-subtitle>
                   <v-card-actions>
-                    <v-btn outlined x-small :color="s.status == 'open' ? 'green' : 'red'">{{ s.status }}</v-btn>
-                    <v-btn outlined x-small color="black">n meditions</v-btn>
+                    <v-btn text color="primary" :to="{ name: 'sessions-detail', params: { id: s.id }}">detalle</v-btn>
+                    <v-btn text color="green" @click="capture(s.id)" v-if="s.status == 'close'">Capture</v-btn>
+                    <v-btn text color="danger" @click="close(s.id)" v-if="s.status == 'open'">Close</v-btn>
+                    <v-btn text color="red" @click="remove(s.id)" v-if="s.status == 'close'">Remove</v-btn>
                   </v-card-actions>
-
-                  <v-card-actions>
-                    <v-btn text color="primary" :to="{ name: 'sessions-detail', params: { id: s.id }}">Ver detalle</v-btn>
-                  </v-card-actions>
-                
                 </v-card>
-                
               </v-col>
             </v-row>
           </template>
@@ -65,14 +63,27 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import service from '@/services/sessions';
 
 export default {
   data: () => ({}),
   computed: mapState(["sessions", "sessions_loading"]),
   methods: {
     ...mapActions(["fetch_session"]),
-    new_session() {
-
+    open() {
+      
+    },
+    capture(id) {
+      service.capture(id)
+        .then(this.fetch_session);
+    },
+    close(id) {
+      service.close(id)
+        .then(this.fetch_session);
+    },
+    remove(id) {
+      service.remove(id)
+        .then(this.fetch_session);
     }
   },
   created() {

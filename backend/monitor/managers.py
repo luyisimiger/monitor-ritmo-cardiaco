@@ -56,13 +56,15 @@ class SessionManager(BaseManager):
 
     return self.get(id)
 
-  def close(self, id):
-    
+  def set_status(self, id, status):
     self.table.update({
-      "status": "close"
+      "status": status
     }, doc_ids=[id])
 
     return self.get(id)
+
+  def close(self, id):
+    return self.set_status(id, "close")
 
   def get(self, id):
     doc = self.table.get(doc_id=id)
@@ -153,8 +155,8 @@ class MeditionManager(BaseManager):
       mindate = mindate if mindate <= m["date"] else m["date"]
     
     # promedio: division sobre el total de datos
-    avgrh = 0 if total == 0 else sumrh / total
-    avgrr = 0 if total == 0 else sumrr / total
+    avgrh = round( 0 if total == 0 else sumrh / total , 2)
+    avgrr = round( 0 if total == 0 else sumrr / total , 2)
 
     # desviacion estandar: sum de diferencia de cuadrados
     for m in meditions:

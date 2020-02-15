@@ -44,7 +44,11 @@
           <v-tab-item
             key="data"
           >
-            Tab content data
+            <v-data-table
+              :headers="headers"
+              :items="session.meditions"
+            >
+            </v-data-table>
           </v-tab-item>
         </v-tabs-items>
       </v-col>
@@ -124,6 +128,7 @@
 // @ is an alias to /src
 import LineChart from "@/components/LineChart.js";
 import service from "@/services/sessions";
+import moment from "moment";
 
 export default {
   components: {
@@ -152,12 +157,18 @@ export default {
           min: 0,
           sigma: 0
         }
-      }
+      },
+      meditions: []
     },
     chartData: [],
     startdate: 0,
     requestDataId: null,
-    capture: false
+    capture: false,
+    headers: [
+      { text: "Fecha", value: "fecha" },
+      { text: "RH", value: "rh" },
+      { text: "RR", value: "rr" }
+    ]
   }),
 
   methods: {
@@ -174,8 +185,15 @@ export default {
       let vm = this;
       return service.detail(vm.id)
         .then(response => {
-          vm.session = response.data;
+          vm.session = vm.parse_session(response.data);
         });
+    },
+    parse_session(session) {
+      session.meditions = session.meditions.map(m => ({
+        ...m,
+        fecha: moment(m.date).format("D MMM YYYY, hh[:]mm[:]ss A")
+      }));
+      return session;
     },
     startCapture() {
       this.capture = true;
