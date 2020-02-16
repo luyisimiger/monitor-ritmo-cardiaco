@@ -1,20 +1,37 @@
 <template>
   <v-container fluid fill-height>
     <v-toolbar flat>
-      <v-spacer></v-spacer>
-      <v-toolbar-title class="display-1">Session # {{session.id}}
-        <v-btn depressed large :color="session.status == 'open' ? 'green' : 'red'" class="white--text">{{session.status}}</v-btn>
+      
+      <v-toolbar-title>
+        Session # {{session.id}}
+        <v-btn depressed small :color="session.status == 'open' ? 'green' : 'red'" class="white--text">{{session.status}}</v-btn>
       </v-toolbar-title>
+      
       <v-spacer></v-spacer>
-      <v-btn color="success" @click="$refs.mychart.reset()">
+
+      <v-btn text color="success" v-if="!capture" @click="$refs.mychart.reset()">
         <v-icon>mdi-restart</v-icon>
         Reiniciar streaming
       </v-btn>
-      <v-btn color="primary">
+      
+      <v-btn text color="primary" v-if="!capture" @click="startCapture">
+        <v-icon>mdi-play</v-icon>
+        Iniciar captura
+      </v-btn>
+      
+      <v-btn text color="primary" v-if="capture" @click="stopCapture">
         <v-icon>mdi-stop</v-icon>
         Detener captura
       </v-btn>
+
       <v-spacer></v-spacer>
+
+      <v-toolbar-title class="overline">
+        {{session.meditions.length}} meditions
+      </v-toolbar-title>
+
+      <v-spacer></v-spacer>
+
     </v-toolbar>
     <v-row align="center" justify="center">
       <v-col cols="12">
@@ -36,8 +53,11 @@
             <v-responsive aspect-ratio="1">
               <LineChart
                 ref="mychart"
-                :chartData="chartData"
+                :chartDataRH="chartDataRH"
+                :chartDataRR="chartDataRR"
                 :startdate="startdate"
+                :enddate="enddate"
+                :applyDelay="!capture"
               />
             </v-responsive>
           </v-tab-item>
@@ -144,6 +164,8 @@ export default {
   data: () => ({
     tab: null,
     session: {
+      id: 0,
+      status: "",
       detail: {
         rh: {
           average: 0,
@@ -160,10 +182,7 @@ export default {
       },
       meditions: []
     },
-    chartData: [],
-    startdate: 0,
     requestDataId: null,
-    capture: false,
     headers: [
       { text: "Fecha", value: "fecha" },
       { text: "RH", value: "rh" },
@@ -171,15 +190,37 @@ export default {
     ]
   }),
 
-  methods: {
-    updateChartData() {
-      this.chartData = this.session.meditions.map(m => {
+  computed: {
+    chartDataRH() {
+      return this.session.meditions.map(m => {
         return {
           t: new Date(m.date),
           y: m.rh
         }
-      });
-      this.startdate = this.session.detail.datestart;
+      });      
+    },
+    chartDataRR() {
+      return this.session.meditions.map(m => {
+        return {
+          t: new Date(m.date),
+          y: m.rr
+        }
+      });      
+    },
+    capture() {
+      return this.session.status == "open";
+    },
+    startdate() {
+      return this.session.detail.datestart;
+    },
+    enddate() {
+      return this.session.detail.dateend;
+    }
+  },
+
+  methods: {
+    strDate(date) {
+      return moment(date).format("D MMM YYYY, hh[:]mm[:]ss A")
     },
     fetch_session() {
       let vm = this;
@@ -191,32 +232,32 @@ export default {
     parse_session(session) {
       session.meditions = session.meditions.map(m => ({
         ...m,
-        fecha: moment(m.date).format("D MMM YYYY, hh[:]mm[:]ss A")
+        fecha: this.strDate(m.date)
       }));
       return session;
     },
     startCapture() {
-      this.capture = true;
-      this.scheduleRequest();
+      service.capture(this.session.id)
+        .then(this.requestData);
     },
     stopCapture() {
-      this.capture = false;
       clearTimeout(this.requestDataId);
+      service.close(this.session.id)
+        .then(this.requestData);
     },
     scheduleRequest() {
       if (this.capture) {
         let timeout = 3000;
+        clearTimeout(this.requestDataId);
         this.requestDataId = setTimeout(this.requestData, timeout);
       }
     },
     requestData() {
       this.fetch_session()
-        .then(this.updateChartData)
-        //.then(vm.scheduleRequest)
-        //.catch(vm.scheduleRequest);
+        .then(this.scheduleRequest)
+        .catch(this.scheduleRequest);
     }
   },
-  computed: {},
   watch: {},
   created() {
     this.requestData();

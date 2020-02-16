@@ -15,7 +15,7 @@
 
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn x-large icon color="primary" v-on="on" :to="{'name': 'sessions-open'}">
+              <v-btn x-large icon color="primary" v-on="on" @click="open">
                 <v-icon>mdi-plus-circle</v-icon>
               </v-btn>
             </template>
@@ -71,7 +71,8 @@ export default {
   methods: {
     ...mapActions(["fetch_session"]),
     open() {
-      
+      service.open()
+        .then(this.fetch_session);
     },
     capture(id) {
       service.capture(id)

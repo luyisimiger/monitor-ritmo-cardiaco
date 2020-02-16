@@ -1,6 +1,7 @@
 import math
 import time
 import sys
+import statistics
 from tinydb import TinyDB, where
 from tinydb.middlewares import Middleware
 
@@ -124,18 +125,22 @@ class MeditionManager(BaseManager):
     maxrh = 0
     minrh = sys.maxsize
     avgrh = 0
-    ssumrh = 0
     srh = 0
 
     sumrr = 0
     maxrr = 0
     minrr = sys.maxsize
     avgrr = 0
-    ssumrr = 0
     srr = 0
+
+    auxrh = []
+    auxrr = []
     
     for m in meditions:
       total += 1
+
+      auxrh.append(m["rh"])
+      auxrr.append(m["rr"])
 
       # initialization
       mindate = m["date"] if mindate is None else mindate
@@ -158,22 +163,12 @@ class MeditionManager(BaseManager):
     avgrh = round( 0 if total == 0 else sumrh / total , 2)
     avgrr = round( 0 if total == 0 else sumrr / total , 2)
 
-    # desviacion estandar: sum de diferencia de cuadrados
-    for m in meditions:
-      ssumrh += (m["rh"] - avgrh) ** 2
-      ssumrr += (m["rr"] - avgrr) ** 2
-
-    # desviacion estandar: division sobre el total de datos
-    srh = 0 if total >= 0 else ssumrh / total
-    srr = 0 if total >= 0 else ssumrr / total
-
-    # desviacion estandar: raiz cuadrada
-    srh = math.sqrt(srh)
-    srr = math.sqrt(srr)
+    srh = 0 if len(auxrh) < 2 else round( statistics.stdev(auxrh) , 2)
+    srr = 0 if len(auxrr) < 2 else round( statistics.stdev(auxrr) , 2)
 
     return {
-      "datestart": maxdate,
-      "dateend": mindate,
+      "datestart": mindate,
+      "dateend": maxdate,
       "rh": {
         "average": avgrh,
         "max": maxrh,
