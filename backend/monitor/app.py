@@ -6,6 +6,7 @@ import rq
 from . import device
 from .managers import SessionManager
 from .config import Config
+from .logic import detail_session
 
 
 app = Flask(__name__)
@@ -53,7 +54,7 @@ def session_capture(id):
 @app.route('/sessions/<int:id>/detail')
 def session_detail(id):
   sessions_manager = SessionManager()
-  session = sessions_manager.detail(id)
+  session = detail_session(sessions_manager, id)
 
   return session
 
@@ -72,7 +73,7 @@ def session_close(id):
 @app.route('/sessions/<int:id>/remove')
 def session_remove(id):
   sessions_manager = SessionManager()
-  session = sessions_manager.detail(id)
+  session = detail_session(sessions_manager, id)
   sessions_manager.remove(id)
   return session
 
@@ -98,7 +99,9 @@ def session_opened():
 @app.route('/sessions/full')
 def session_all_full():
   sessions_manager = SessionManager()
+  sessions = sessions_manager.all()
+
   response = {}
-  response["result"] = sessions_manager.all_full()
+  response["result"] = [ detail_session(sessions_manager, int(s["id"])) for s in sessions]
 
   return response

@@ -175,6 +175,7 @@ export default {
       this.start();
     },
     applyDelay() {
+      console.log("applyDelay");
       if (!this.applyDelay) this.updateDelay(0);
     },
     pause: function() {

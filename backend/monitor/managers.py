@@ -1,9 +1,8 @@
 import math
 import time
-import sys
-import statistics
 from tinydb import TinyDB, where
 from tinydb.middlewares import Middleware
+
 
 DATABASE_FILE = "monitor.json"
 
@@ -75,25 +74,11 @@ class SessionManager(BaseManager):
     self.meditions.remove(id)
     self.table.remove(doc_ids=[id])
 
-  def detail(self, id):
-    doc = self.get(id)
-    meditions = self.meditions.all(id)
-    detail = self.meditions.detail(meditions)
-
-    doc["detail"] = detail
-    doc["meditions"] = meditions
-
-    return doc
-
   def all(self):
     return self.table.all()
 
   def all_opened(self):
     return self.table.search( where("status") == "open" )
-
-  def all_full(self):
-    sessions = self.all()
-    return [self.detail(int(s["id"])) for s in sessions]
 
 
 class MeditionManager(BaseManager):
@@ -114,71 +99,3 @@ class MeditionManager(BaseManager):
 
   def all(self, sessionid):
     return self.table.search(where("sessionid") == str(sessionid))
-
-  @staticmethod
-  def detail(meditions):
-    total = 0
-    mindate = None
-    maxdate = None
-    
-    sumrh = 0
-    maxrh = 0
-    minrh = sys.maxsize
-    avgrh = 0
-    srh = 0
-
-    sumrr = 0
-    maxrr = 0
-    minrr = sys.maxsize
-    avgrr = 0
-    srr = 0
-
-    auxrh = []
-    auxrr = []
-    
-    for m in meditions:
-      total += 1
-
-      auxrh.append(m["rh"])
-      auxrr.append(m["rr"])
-
-      # initialization
-      mindate = m["date"] if mindate is None else mindate
-      maxdate = m["date"] if maxdate is None else maxdate
-      
-      # promedio: sumatoria de los datos
-      sumrh += m["rh"]
-      maxrh = maxrh if maxrh >= m["rh"] else m["rh"]
-      minrh = minrh if minrh <= m["rh"] else m["rh"]
-
-      sumrr += m["rr"]
-      maxrr = maxrr if maxrr >= m["rr"] else m["rr"]
-      minrr = minrr if minrr <= m["rr"] else m["rr"]
-
-      # fechas: maximo y minimo
-      maxdate = maxdate if maxdate >= m["date"] else m["date"]
-      mindate = mindate if mindate <= m["date"] else m["date"]
-    
-    # promedio: division sobre el total de datos
-    avgrh = round( 0 if total == 0 else sumrh / total , 2)
-    avgrr = round( 0 if total == 0 else sumrr / total , 2)
-
-    srh = 0 if len(auxrh) < 2 else round( statistics.stdev(auxrh) , 2)
-    srr = 0 if len(auxrr) < 2 else round( statistics.stdev(auxrr) , 2)
-
-    return {
-      "datestart": mindate,
-      "dateend": maxdate,
-      "rh": {
-        "average": avgrh,
-        "max": maxrh,
-        "min": minrh,
-        "sigma": srh
-      },
-      "rr": {
-        "average": avgrr,
-        "max": maxrr,
-        "min": minrr,
-        "sigma": srr
-      }
-    }

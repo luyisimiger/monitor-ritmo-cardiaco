@@ -72,9 +72,9 @@
           </v-tab-item>
         </v-tabs-items>
       </v-col>
-      <v-col cols="2">
+      <v-col cols="4">
         <v-row>
-          <v-col md>
+          <v-col cols="6">
             <v-card>
               <v-list color="red" dense>
                 <v-subheader class="headline white--text">DATOS DEL RH</v-subheader>
@@ -105,9 +105,28 @@
               </v-list>
             </v-card>
           </v-col>
+          <v-col cols="6">
+            <v-card>
+              <v-list color="red" dense>
+                <v-subheader class="headline white--text">CENTROIDES</v-subheader>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title class="title white--text">{{ session.detail.rh.centroid1 }}</v-list-item-title>
+                    <v-list-item-subtitle class="overline white--text">Centroide 1</v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title class="title white--text">{{ session.detail.rh.centroid2 }}</v-list-item-title>
+                    <v-list-item-subtitle class="overline white--text">Centroide 2</v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
+            </v-card>
+          </v-col>
         </v-row>
         <v-row>
-          <v-col md>
+          <v-col cols="6">
             <v-card>
               <v-list color="blue" dense>
                 <v-subheader class="headline white--text">DATOS DEL RR</v-subheader>
@@ -133,6 +152,25 @@
                   <v-list-item-content>
                     <v-list-item-title class="title white--text">{{ session.detail.rr.sigma }}</v-list-item-title>
                     <v-list-item-subtitle class="white--text">Desviacion estandar</v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
+            </v-card>
+          </v-col>
+          <v-col cols="6">
+            <v-card>
+              <v-list color="blue" dense>
+                <v-subheader class="headline white--text">CENTROIDES</v-subheader>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title class="title white--text">{{ session.detail.rr.centroid1 }}</v-list-item-title>
+                    <v-list-item-subtitle class="overline white--text">Centroide 1</v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title class="title white--text">{{ session.detail.rr.centroid2 }}</v-list-item-title>
+                    <v-list-item-subtitle class="overline white--text">Centroide 2</v-list-item-subtitle>
                   </v-list-item-content>
                 </v-list-item>
               </v-list>
@@ -171,7 +209,9 @@ export default {
           average: 0,
           max: 0,
           min: 0,
-          sigma: 0
+          sigma: 0,
+          centroid1: 0,
+          centroid2: 0
         },
         rr: {
           average: 0,

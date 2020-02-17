@@ -4,3 +4,6 @@ flask-cors
 tinydb
 rq
 pyserial
+numpy
+matplotlib
+Scikit-Learn
