@@ -12,7 +12,7 @@
     "chart.js": "^2.9.3",
     "chartjs-plugin-streaming": "^1.8.0",
     "core-js": "^3.4.4",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "vue": "^2.6.10",
     "vue-chartjs": "^3.5.0",
     "vue-router": "^3.1.3",
